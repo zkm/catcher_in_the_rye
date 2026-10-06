@@ -56,6 +56,37 @@ test('joins continuation lines and separates paragraphs with blank lines', () =>
   ]);
 });
 
+test('splits paragraphs run together with three spaces', () => {
+  const book = parseBook([
+    '1',
+    ' "Who\'s that?" he yelled.   "Caulfield? Come in, boy."',
+    ' I sat down on it.   Then he said,',
+    'something.   "Hello," I said.   Boy, was it cold.',
+  ].join('\n'));
+  assert.deepEqual(book.chapters[0].lines, [
+    '"Who\'s that?" he yelled.',
+    '',
+    '"Caulfield? Come in, boy."',
+    '',
+    'I sat down on it.',
+    '',
+    'Then he said, something.',
+    '',
+    '"Hello," I said.',
+    '',
+    'Boy, was it cold.',
+  ]);
+});
+
+test('keeps three spaces that are not at a sentence end', () => {
+  const book = parseBook('1\n residing in   one of the northern sections.\n at me,   I hope not.');
+  assert.deepEqual(book.chapters[0].lines, [
+    'residing in   one of the northern sections.',
+    '',
+    'at me,   I hope not.',
+  ]);
+});
+
 test('numbers chapters in reading order', () => {
   const book = parseBook(SAMPLE);
   assert.deepEqual(book.chapters.map((c) => c.index), [0, 1, 2]);

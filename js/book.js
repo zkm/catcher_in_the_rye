@@ -3,7 +3,8 @@
 // The text opens with a title, byline and dedication, then each chapter starts
 // with a line holding just its number ("1", "2", ...). Inside a chapter each
 // paragraph is one line that starts with a space. A line that doesn't start
-// with a space continues the paragraph before it.
+// with a space continues the paragraph before it. Some lines hold several
+// paragraphs run together, separated by three spaces after a sentence ends.
 //
 // Returned shape:
 //   { title, author, words, chapters: [chapter, ...] }   // chapters in reading order
@@ -16,12 +17,16 @@ import { BOOK_AUTHOR, BOOK_TITLE } from './config.js';
 
 const CHAPTER_HEADING = /^\d+$/;
 
+// Three or more spaces between the end of a sentence and the start of the next
+// one. Elsewhere (in the quoted essay, say) they are only line breaks.
+const RUN_ON_BREAK = /(?<=[.?!"'])\s{3,}(?=["'A-Z])/;
+
 function countWords(lines) {
   return lines.join(' ').split(/\s+/).filter(Boolean).length;
 }
 
-// Joins continuation lines onto their paragraph and returns the paragraphs
-// separated by blank lines.
+// Joins continuation lines onto their paragraph, splits run-together
+// paragraphs apart, and returns the paragraphs separated by blank lines.
 function toParagraphLines(lines) {
   const paragraphs = [];
   for (const line of lines) {
@@ -33,7 +38,9 @@ function toParagraphLines(lines) {
       paragraphs[paragraphs.length - 1] += ` ${text}`;
     }
   }
-  return paragraphs.flatMap((p, i) => (i ? ['', p] : [p]));
+  return paragraphs
+    .flatMap((p) => p.split(RUN_ON_BREAK))
+    .flatMap((p, i) => (i ? ['', p] : [p]));
 }
 
 // Groups lines into chapters. A heading only counts when it is the next
